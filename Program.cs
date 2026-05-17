@@ -3,40 +3,34 @@ using RankServer.Data;
 using RankServer.Models;
 using RankServer.Services;
 
-var builder =
-    WebApplication.CreateBuilder(args);
-
+var builder = WebApplication.CreateBuilder(args);
 
 //---------------------------
 // Services
 //---------------------------
 
-builder.Services
-.AddControllers();
+builder.Services.AddControllers();
 
-builder.Services
-.AddEndpointsApiExplorer();
+builder.Services.AddEndpointsApiExplorer();
 
-builder.Services
-.AddSwaggerGen();
+builder.Services.AddSwaggerGen();
 
 
 //---------------------------
 // MySQL Railway
 //---------------------------
 
-builder.Services
-.AddDbContext<AppDbContext>(
+var connectionString =
+builder.Configuration
+.GetConnectionString(
+"DefaultConnection");
+
+builder.Services.AddDbContext<AppDbContext>(
 options =>
 options.UseMySql(
-builder.Configuration
-.GetConnectionString(
-"DefaultConnection"),
-
+connectionString,
 ServerVersion.AutoDetect(
-builder.Configuration
-.GetConnectionString(
-"DefaultConnection"))
+connectionString)
 ));
 
 
@@ -70,8 +64,7 @@ app.MapControllers();
 // Auto migrate
 //---------------------------
 
-using (
-var scope =
+using (var scope =
 app.Services.CreateScope())
 {
     var db =
@@ -80,53 +73,57 @@ app.Services.CreateScope())
     AppDbContext>();
 
 
-    db.Database.Migrate();
-
-
-    //--------------------------------
-    // tạo season đầu tiên
-    //--------------------------------
-
-    if (
-    !db.RankSeasons.Any())
+    try
     {
-        db.RankSeasons.Add(
-        new RankSeason
+        db.Database.Migrate();
+
+        //--------------------------------
+        // tạo season đầu tiên
+        //--------------------------------
+
+        if (!db.RankSeasons.Any())
         {
-            Name = "WEEK_1",
+            db.RankSeasons.Add(
+            new RankSeason
+            {
+                Name = "WEEK_1",
 
-            Type = "WEEK",
+                Type = "WEEK",
 
-            IsActive = true,
+                IsActive = true,
 
-            StartDate =
-            DateTime.UtcNow,
+                StartDate =
+                DateTime.UtcNow,
 
-            EndDate =
-            DateTime.UtcNow
-            .AddDays(7)
-        });
+                EndDate =
+                DateTime.UtcNow
+                .AddDays(7)
+            });
 
+            db.RankSeasons.Add(
+            new RankSeason
+            {
+                Name = "MONTH_1",
 
-        db.RankSeasons.Add(
-        new RankSeason
-        {
-            Name = "MONTH_1",
+                Type = "MONTH",
 
-            Type = "MONTH",
+                IsActive = true,
 
-            IsActive = true,
+                StartDate =
+                DateTime.UtcNow,
 
-            StartDate =
-            DateTime.UtcNow,
+                EndDate =
+                DateTime.UtcNow
+                .AddMonths(1)
+            });
 
-            EndDate =
-            DateTime.UtcNow
-            .AddMonths(1)
-        });
-
-
-        db.SaveChanges();
+            db.SaveChanges();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+        ex.ToString());
     }
 }
 
@@ -141,13 +138,11 @@ Environment
 .GetEnvironmentVariable(
 "PORT");
 
-if (
-!string.IsNullOrEmpty(
+if (!string.IsNullOrEmpty(
 port))
 {
     app.Urls.Add(
     $"http://0.0.0.0:{port}");
 }
-
 
 app.Run();

@@ -12,18 +12,18 @@ using RankServer.Data;
 namespace RankServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260516112332_Init")]
-    partial class Init
+    [Migration("20260517094053_InitMySql")]
+    partial class InitMySql
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
             modelBuilder.Entity("RankServer.Models.RankEntry", b =>
                 {
@@ -31,12 +31,9 @@ namespace RankServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<long>("SeasonId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("TotalDamage")
                         .HasColumnType("bigint");
 
                     b.Property<long>("TotalKills")
@@ -45,17 +42,17 @@ namespace RankServer.Migrations
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("Victories")
-                        .HasColumnType("int");
-
                     b.Property<long>("WarPoints")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SeasonId", "Victories");
+                    b.HasIndex("SeasonId", "TotalKills");
 
                     b.HasIndex("SeasonId", "WarPoints");
+
+                    b.HasIndex("UserId", "SeasonId")
+                        .IsUnique();
 
                     b.ToTable("RankEntries");
                 });
@@ -66,17 +63,17 @@ namespace RankServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("RankPosition")
                         .HasColumnType("int");
 
                     b.Property<string>("RankType")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varchar(255)");
 
                     b.Property<long>("Score")
                         .HasColumnType("bigint");
@@ -89,6 +86,8 @@ namespace RankServer.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SeasonId", "RankType");
+
                     b.ToTable("RankHistories");
                 });
 
@@ -98,55 +97,55 @@ namespace RankServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
                     b.ToTable("RankSeasons");
                 });
 
-            modelBuilder.Entity("RankServer.Models.User", b =>
+            modelBuilder.Entity("User", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("AvatarUrl")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("longtext");
 
-                    b.Property<int>("Exp")
-                        .HasColumnType("int");
+                    b.Property<long>("Exp")
+                        .HasColumnType("bigint");
 
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
+                    b.Property<long>("Level")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Nickname")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("TiktokUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("varchar(255)");
 
                     b.HasKey("Id");
 
