@@ -139,4 +139,6 @@ C:\Users\Admin\source\repos\RankServer\obj\Debug\net9.0\refint\RankServer.dll
 C:\Users\Admin\source\repos\RankServer\obj\Debug\net9.0\RankServer.pdb
 C:\Users\Admin\source\repos\RankServer\obj\Debug\net9.0\RankServer.genruntimeconfig.cache
 C:\Users\Admin\source\repos\RankServer\obj\Debug\net9.0\ref\RankServer.dll
-C:\Users\Admin\source\repos\RankServer\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
+C:\Users\Admin\source\repos\RankServer\bin\Debug\net9.0\MySqlConnector.dll
+C:\Users\Admin\source\repos\RankServer\bin\Debug\net9.0\Pomelo.EntityFrameworkCore.MySql.dll
+C:\Users\Admin\source\repos\RankServer\obj\Debug\net9.0\RankServer.sourcelink.json

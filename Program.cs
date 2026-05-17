@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using RankServer.Data;
 using RankServer.Models;
 using RankServer.Services;
@@ -7,62 +7,88 @@ var builder =
     WebApplication.CreateBuilder(args);
 
 
+//---------------------------
+// Services
+//---------------------------
+
 builder.Services
 .AddControllers();
 
-
 builder.Services
 .AddEndpointsApiExplorer();
-
 
 builder.Services
 .AddSwaggerGen();
 
 
+//---------------------------
+// MySQL Railway
+//---------------------------
+
 builder.Services
 .AddDbContext<AppDbContext>(
-x => x.UseSqlServer(
+options =>
+options.UseMySql(
 builder.Configuration
 .GetConnectionString(
-"DefaultConnection")
+"DefaultConnection"),
+
+ServerVersion.AutoDetect(
+builder.Configuration
+.GetConnectionString(
+"DefaultConnection"))
 ));
 
+
+//---------------------------
+// Auto reset season
+//---------------------------
 
 builder.Services
 .AddHostedService<
 SeasonService>();
 
 
-
 var app =
 builder.Build();
 
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
+//---------------------------
+// Swagger
+//---------------------------
 
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
 
-app.UseHttpsRedirection();
+app.UseSwaggerUI();
 
 app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope =
-    app.Services.CreateScope())
+
+//---------------------------
+// Auto migrate
+//---------------------------
+
+using (
+var scope =
+app.Services.CreateScope())
 {
     var db =
-        scope.ServiceProvider
-        .GetRequiredService<AppDbContext>();
+    scope.ServiceProvider
+    .GetRequiredService<
+    AppDbContext>();
 
 
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
 
 
-    if (!db.RankSeasons.Any())
+    //--------------------------------
+    // tạo season đầu tiên
+    //--------------------------------
+
+    if (
+    !db.RankSeasons.Any())
     {
         db.RankSeasons.Add(
         new RankSeason
@@ -74,11 +100,11 @@ using (var scope =
             IsActive = true,
 
             StartDate =
-                DateTime.UtcNow,
+            DateTime.UtcNow,
 
             EndDate =
-                DateTime.UtcNow
-                .AddDays(7)
+            DateTime.UtcNow
+            .AddDays(7)
         });
 
 
@@ -92,15 +118,36 @@ using (var scope =
             IsActive = true,
 
             StartDate =
-                DateTime.UtcNow,
+            DateTime.UtcNow,
 
             EndDate =
-                DateTime.UtcNow
-                .AddMonths(1)
+            DateTime.UtcNow
+            .AddMonths(1)
         });
+
 
         db.SaveChanges();
     }
 }
+
+
+
+//---------------------------
+// Railway port
+//---------------------------
+
+var port =
+Environment
+.GetEnvironmentVariable(
+"PORT");
+
+if (
+!string.IsNullOrEmpty(
+port))
+{
+    app.Urls.Add(
+    $"http://0.0.0.0:{port}");
+}
+
 
 app.Run();
