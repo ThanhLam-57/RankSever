@@ -38,7 +38,6 @@ public class RankController : ControllerBase
 
         var now = DateTime.UtcNow;
 
-
         season =
         new RankSeason
         {
@@ -63,15 +62,12 @@ public class RankController : ControllerBase
             IsActive = true
         };
 
-
-        _db.RankSeasons.Add(
-            season);
+        _db.RankSeasons.Add(season);
 
         await _db.SaveChangesAsync();
 
         return season;
     }
-
 
 
     //------------------------------------
@@ -87,11 +83,11 @@ public class RankController : ControllerBase
         {
             var week =
             await GetOrCreateSeason(
-                "WEEK");
+            "WEEK");
 
             var month =
             await GetOrCreateSeason(
-                "MONTH");
+            "MONTH");
 
 
             foreach (
@@ -122,11 +118,9 @@ public class RankController : ControllerBase
                         p.Avatar
                     };
 
-                    _db.Users.Add(
-                        user);
+                    _db.Users.Add(user);
 
-                    await _db
-                    .SaveChangesAsync();
+                    await _db.SaveChangesAsync();
                 }
                 else
                 {
@@ -142,6 +136,7 @@ public class RankController : ControllerBase
                     user.Id,
                     week.Id,
                     p);
+
 
                 await AddPoint(
                     user.Id,
@@ -163,8 +158,8 @@ public class RankController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(
-            500,
-            ex.Message);
+                500,
+                ex.Message);
         }
     }
 
@@ -193,11 +188,9 @@ public class RankController : ControllerBase
             rank =
             new RankEntry
             {
-                UserId =
-                userId,
+                UserId = userId,
 
-                SeasonId =
-                seasonId,
+                SeasonId = seasonId,
 
                 WarPoints = 0,
 
@@ -210,11 +203,11 @@ public class RankController : ControllerBase
 
 
         rank.WarPoints +=
-            req.MatchPoint;
+        req.MatchPoint;
 
 
         rank.TotalKills +=
-            req.KillCount;
+        req.KillCount;
 
 
         await _db.SaveChangesAsync();
@@ -223,7 +216,7 @@ public class RankController : ControllerBase
 
 
     //------------------------------------
-    // WEEK POINT
+    // API
     //------------------------------------
 
     [HttpGet("weekly/point")]
@@ -232,15 +225,11 @@ public class RankController : ControllerBase
     {
         return Ok(
         await GetRank(
-            "WEEK",
-            "POINT"));
+        "WEEK",
+        "POINT"));
     }
 
 
-
-    //------------------------------------
-    // WEEK KILL
-    //------------------------------------
 
     [HttpGet("weekly/kill")]
     public async Task<IActionResult>
@@ -248,15 +237,11 @@ public class RankController : ControllerBase
     {
         return Ok(
         await GetRank(
-            "WEEK",
-            "KILL"));
+        "WEEK",
+        "KILL"));
     }
 
 
-
-    //------------------------------------
-    // MONTH POINT
-    //------------------------------------
 
     [HttpGet("monthly/point")]
     public async Task<IActionResult>
@@ -264,15 +249,11 @@ public class RankController : ControllerBase
     {
         return Ok(
         await GetRank(
-            "MONTH",
-            "POINT"));
+        "MONTH",
+        "POINT"));
     }
 
 
-
-    //------------------------------------
-    // MONTH KILL
-    //------------------------------------
 
     [HttpGet("monthly/kill")]
     public async Task<IActionResult>
@@ -280,8 +261,8 @@ public class RankController : ControllerBase
     {
         return Ok(
         await GetRank(
-            "MONTH",
-            "KILL"));
+        "MONTH",
+        "KILL"));
     }
 
 
@@ -303,6 +284,7 @@ public class RankController : ControllerBase
         seasonType
         &&
         x.IsActive);
+
 
 
         if (rankType == "KILL")
@@ -330,6 +312,8 @@ public class RankController : ControllerBase
 
                 select new
                 {
+                    u.TiktokUserId,
+
                     u.Nickname,
 
                     u.AvatarUrl,
@@ -345,14 +329,14 @@ public class RankController : ControllerBase
             .ToListAsync();
 
 
-
             return data
             .Select(
             (x, index) =>
             (object)new
             {
-                Rank =
-                index + 1,
+                Rank = index + 1,
+
+                x.TiktokUserId,
 
                 x.Nickname,
 
@@ -390,6 +374,8 @@ public class RankController : ControllerBase
 
                 select new
                 {
+                    u.TiktokUserId,
+
                     u.Nickname,
 
                     u.AvatarUrl,
@@ -405,14 +391,14 @@ public class RankController : ControllerBase
             .ToListAsync();
 
 
-
             return data
             .Select(
             (x, index) =>
             (object)new
             {
-                Rank =
-                index + 1,
+                Rank = index + 1,
+
+                x.TiktokUserId,
 
                 x.Nickname,
 
@@ -429,7 +415,7 @@ public class RankController : ControllerBase
 
 
     //------------------------------------
-    // THÔNG TIN RIÊNG
+    // THÔNG TIN USER
     //------------------------------------
 
     [HttpGet(
@@ -500,25 +486,17 @@ public class RankController : ControllerBase
 
             user.AvatarUrl,
 
-
             WeeklyPoint =
-            weekly?.WarPoints
-            ?? 0,
-
+            weekly?.WarPoints ?? 0,
 
             WeeklyKill =
-            weekly?.TotalKills
-            ?? 0,
-
+            weekly?.TotalKills ?? 0,
 
             MonthlyPoint =
-            monthly?.WarPoints
-            ?? 0,
-
+            monthly?.WarPoints ?? 0,
 
             MonthlyKill =
-            monthly?.TotalKills
-            ?? 0
+            monthly?.TotalKills ?? 0
         });
     }
 }
