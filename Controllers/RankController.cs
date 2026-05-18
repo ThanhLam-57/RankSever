@@ -411,7 +411,241 @@ public class RankController : ControllerBase
             .ToList();
         }
     }
+    //------------------------------------
+    // USER RANK API
+    //------------------------------------
 
+    [HttpGet(
+    "weekly/point/{tikTokUserId}")]
+    public async Task<IActionResult>
+    WeeklyPointUser(
+    string tikTokUserId)
+    {
+        return Ok(
+        await GetUserRank(
+        tikTokUserId,
+        "WEEK",
+        "POINT"));
+    }
+
+
+    [HttpGet(
+    "weekly/kill/{tikTokUserId}")]
+    public async Task<IActionResult>
+    WeeklyKillUser(
+    string tikTokUserId)
+    {
+        return Ok(
+        await GetUserRank(
+        tikTokUserId,
+        "WEEK",
+        "KILL"));
+    }
+
+
+    [HttpGet(
+    "monthly/point/{tikTokUserId}")]
+    public async Task<IActionResult>
+    MonthlyPointUser(
+    string tikTokUserId)
+    {
+        return Ok(
+        await GetUserRank(
+        tikTokUserId,
+        "MONTH",
+        "POINT"));
+    }
+
+
+    [HttpGet(
+    "monthly/kill/{tikTokUserId}")]
+    public async Task<IActionResult>
+    MonthlyKillUser(
+    string tikTokUserId)
+    {
+        return Ok(
+        await GetUserRank(
+        tikTokUserId,
+        "MONTH",
+        "KILL"));
+    }
+
+
+
+    //------------------------------------
+    // GET USER RANK
+    //------------------------------------
+    private async Task<object>
+GetUserRank(
+string tikTokUserId,
+string seasonType,
+string rankType)
+    {
+        var season =
+        await GetOrCreateSeason(
+        seasonType);
+
+
+        var data =
+        await
+        (
+            from r
+            in _db.RankEntries
+
+            join u
+            in _db.Users
+
+            on r.UserId
+            equals u.Id
+
+            where
+            r.SeasonId
+            ==
+            season.Id
+
+            orderby
+            rankType == "POINT"
+            ?
+            r.WarPoints
+            :
+            r.TotalKills
+            descending
+
+            select new
+            {
+                u.TiktokUserId,
+
+                u.Nickname,
+
+                u.AvatarUrl,
+
+                r.WarPoints,
+
+                r.TotalKills
+            }
+
+        )
+        .ToListAsync();
+
+
+        var index =
+        data.FindIndex(
+        x =>
+        x.TiktokUserId
+        ==
+        tikTokUserId);
+
+
+        if (index < 0)
+        {
+            return new
+            {
+                message =
+                "No rank"
+            };
+        }
+
+
+        var me =
+        data[index];
+
+
+        return new
+        {
+            Rank =
+            index + 1,
+
+            me.TiktokUserId,
+
+            me.Nickname,
+
+            me.AvatarUrl,
+
+            me.WarPoints,
+
+            me.TotalKills
+        };
+    }
+    //private async Task<object>
+    //GetUserRank(
+    //string tikTokUserId,
+    //string seasonType,
+    //string rankType)
+    //{
+    //    var season =
+    //    await GetOrCreateSeason(
+    //    seasonType);
+
+
+
+    //    var data =
+    //    await _db.RankEntries
+
+    //    .Include(
+    //    x => x.User)
+
+    //    .Where(
+    //    x =>
+    //    x.SeasonId ==
+    //    season.Id)
+
+    //    .OrderByDescending(
+    //    x =>
+    //    rankType == "POINT"
+    //    ?
+    //    x.WarPoints
+    //    :
+    //    x.TotalKills)
+
+    //    .ToListAsync();
+
+
+
+    //    var index =
+    //    data.FindIndex(
+    //    x =>
+    //    x.User
+    //    .TiktokUserId
+    //    ==
+    //    tikTokUserId);
+
+
+
+    //    if (index < 0)
+    //    {
+    //        return new
+    //        {
+    //            message =
+    //            "No rank"
+    //        };
+    //    }
+
+
+    //    var me =
+    //    data[index];
+
+
+    //    return new
+    //    {
+    //        Rank =
+    //        index + 1,
+
+    //        TikTokUserId =
+    //        me.User.TiktokUserId,
+
+    //        Nickname =
+    //        me.User.Nickname,
+
+    //        AvatarUrl =
+    //        me.User.AvatarUrl,
+
+    //        WarPoints =
+    //        me.WarPoints,
+
+    //        TotalKills =
+    //        me.TotalKills
+    //    };
+    //}
 
 
     //------------------------------------
