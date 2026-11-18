@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using RankServer.Data;
 using RankServer.DTO;
 using RankServer.Models;
+using RankServer.Services;
 
 namespace RankServer.Controllers;
 
@@ -21,52 +22,12 @@ public class RankController : ControllerBase
     // TỰ TẠO SEASON
     //------------------------------------
 
-    private async Task<RankSeason>
+    // reset cố định 0h thứ Hai / 0h ngày 1 giờ VN (xem SeasonManager)
+    private Task<RankSeason>
     GetOrCreateSeason(string type)
     {
-        var season =
-        await _db.RankSeasons
-        .FirstOrDefaultAsync(
-        x =>
-        x.Type == type
-        &&
-        x.IsActive);
-
-        if (season != null)
-            return season;
-
-
-        var now = DateTime.UtcNow;
-
-        season =
-        new RankSeason
-        {
-            Name =
-            type == "WEEK"
-            ?
-            $"WEEK_{now:yyyyMMdd}"
-            :
-            $"MONTH_{now:yyyyMM}",
-
-            Type = type,
-
-            StartDate = now,
-
-            EndDate =
-            type == "WEEK"
-            ?
-            now.AddDays(7)
-            :
-            now.AddMonths(1),
-
-            IsActive = true
-        };
-
-        _db.RankSeasons.Add(season);
-
-        await _db.SaveChangesAsync();
-
-        return season;
+        return SeasonManager
+        .GetCurrentAsync(_db, type);
     }
 
 
@@ -277,13 +238,8 @@ public class RankController : ControllerBase
     string rankType)
     {
         var season =
-        await _db.RankSeasons
-        .FirstAsync(
-        x =>
-        x.Type ==
-        seasonType
-        &&
-        x.IsActive);
+        await GetOrCreateSeason(
+        seasonType);
 
 
 

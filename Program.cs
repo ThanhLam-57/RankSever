@@ -78,47 +78,16 @@ app.Services.CreateScope())
         db.Database.Migrate();
 
         //--------------------------------
-        // tạo season đầu tiên
+        // tạo / căn chỉnh season theo lịch VN
         //--------------------------------
 
-        if (!db.RankSeasons.Any())
-        {
-            db.RankSeasons.Add(
-            new RankSeason
-            {
-                Name = "WEEK_1",
+        SeasonManager
+        .GetCurrentAsync(db, "WEEK")
+        .GetAwaiter().GetResult();
 
-                Type = "WEEK",
-
-                IsActive = true,
-
-                StartDate =
-                DateTime.UtcNow,
-
-                EndDate =
-                DateTime.UtcNow
-                .AddDays(7)
-            });
-
-            db.RankSeasons.Add(
-            new RankSeason
-            {
-                Name = "MONTH_1",
-
-                Type = "MONTH",
-
-                IsActive = true,
-
-                StartDate =
-                DateTime.UtcNow,
-
-                EndDate =
-                DateTime.UtcNow
-                .AddMonths(1)
-            });
-
-            db.SaveChanges();
-        }
+        SeasonManager
+        .GetCurrentAsync(db, "MONTH")
+        .GetAwaiter().GetResult();
     }
     catch (Exception ex)
     {

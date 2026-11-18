@@ -1,8 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using RankServer.Data;
-using RankServer.Models;
+﻿using RankServer.Data;
 
 namespace RankServer.Services;
+
+//------------------------------------
+// Mỗi phút kiểm tra và reset season
+// theo lịch cố định giờ VN (xem SeasonManager)
+//------------------------------------
 
 public class SeasonService
     : BackgroundService
@@ -11,10 +14,16 @@ public class SeasonService
     IServiceScopeFactory
     _scope;
 
+    private readonly
+    ILogger<SeasonService>
+    _log;
+
     public SeasonService(
-        IServiceScopeFactory scope)
+        IServiceScopeFactory scope,
+        ILogger<SeasonService> log)
     {
         _scope = scope;
+        _log = log;
     }
 
 
@@ -25,124 +34,31 @@ public class SeasonService
         while (
         !stop.IsCancellationRequested)
         {
-            using var s =
-            _scope.CreateScope();
+            try
+            {
+                using var s =
+                _scope.CreateScope();
 
-            var db =
-            s.ServiceProvider
-            .GetRequiredService<
-            AppDbContext>();
+                var db =
+                s.ServiceProvider
+                .GetRequiredService<
+                AppDbContext>();
 
+                await SeasonManager
+                .GetCurrentAsync(db, "WEEK");
 
-            await Check(
-                db,
-                "WEEK");
-
-
-            await Check(
-                db,
-                "MONTH");
-
+                await SeasonManager
+                .GetCurrentAsync(db, "MONTH");
+            }
+            catch (Exception ex)
+            {
+                // lỗi DB tạm thời không được làm chết service
+                _log.LogError(ex, "Season check failed");
+            }
 
             await Task.Delay(
                 TimeSpan.FromMinutes(1),
                 stop);
         }
-    }
-
-
-
-    async Task Check(
-        AppDbContext db,
-        string type)
-    {
-        var season =
-        await db.RankSeasons
-        .FirstOrDefaultAsync(
-        x =>
-        x.Type == type
-        &&
-        x.IsActive);
-
-
-        //--------------------------------
-        // chưa có season
-        //--------------------------------
-
-        if (season == null)
-        {
-            await CreateSeason(
-                db,
-                type);
-
-            return;
-        }
-
-
-        //--------------------------------
-        // hết hạn
-        //--------------------------------
-
-        if (DateTime.UtcNow
-            >=
-            season.EndDate)
-        {
-            season.IsActive = false;
-
-            await db
-            .SaveChangesAsync();
-
-
-            await CreateSeason(
-                db,
-                type);
-        }
-    }
-
-
-
-    async Task CreateSeason(
-        AppDbContext db,
-        string type)
-    {
-        var now =
-        DateTime.UtcNow;
-
-
-        var season =
-        new RankSeason
-        {
-            Name =
-            type == "WEEK"
-            ?
-            $"WEEK_{now:yyyyMMdd}"
-            :
-            $"MONTH_{now:yyyyMM}",
-
-
-            Type = type,
-
-
-            StartDate =
-            now,
-
-
-            EndDate =
-            type == "WEEK"
-            ?
-            now.AddDays(7)
-            :
-            now.AddMonths(1),
-
-
-            IsActive = true
-        };
-
-
-        db.RankSeasons
-        .Add(season);
-
-        await db
-        .SaveChangesAsync();
     }
 }
